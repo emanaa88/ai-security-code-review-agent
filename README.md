@@ -66,4 +66,6 @@ This tightened version correctly escalated a deliberately vulnerable test commit
 
 ## Status
 
-Working end-to-end for single-commit pushes. Planned next steps: output delivery to Slack/GitHub PR comments, multi-file diff handling, and comparison against rule-based and ATT&CK-augmented reranking approaches explored in parallel SOC alert triage research.
+Working end-to-end for single-commit pushes. Planned next steps: output delivery to Slack/GitHub PR comments, multi-file diff handling,
+## final note 
+The full n8n workflow (nodes, connections, prompt) is available insecurity-review-agent.json and can be imported directly into any n8n instance via Workflows → Import from File.
