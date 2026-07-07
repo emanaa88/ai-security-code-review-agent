@@ -1,0 +1,174 @@
+{
+  "name": "AI Security Code Review",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-push",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "3b6c2ef4-f77f-4569-b09c-d17ae0edce05",
+      "name": "Webhook",
+      "webhookId": "9212c01f-9254-494b-b697-21208ca3c449"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $json.body.repository.owner.login }}/{{ $json.body.repository.name }}/commits/{{ $json.body.head_commit.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        -16
+      ],
+      "id": "12db67f0-acfd-4111-b05d-a093264472fb",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "XN3qxbS44PDLp3Hn",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a security code reviewer. Analyze this code diff for vulnerabilities such as:\n- Hardcoded secrets or credentials\n- SQL injection risk\n- Unsafe deserialization\n- Command injection\n- Insecure use of eval() or similar\n\nDiff:\n{{ $json.files[0].patch }}\n\nRespond with:\n1. Severity (Low/Medium/High/Critical)\n2. One-line summary\n3. Specific recommendation\nIf no issues found, say \"No issues detected.\""
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        -96
+      ],
+      "id": "d6485d85-6b38-4be0-9c24-e6ae28b0996e",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "T1PpbN7fAWliOReP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        448,
+        128
+      ],
+      "id": "56faec48-6e8c-4baf-85d4-0decee52e5c9",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "DeC9mIRX0H1cLupW",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a security code reviewer. Analyze this code diff for vulnerabilities such as: - Hardcoded secrets or credentials - SQL injection risk - Unsafe deserialization - Command injection - Insecure use of eval() or similar  Diff: {{ $json.files[0].patch }}  Respond with: 1. Severity (Low/Medium/High/Critical) 2. One-line summary 3. Specific recommendation If no issues found, say \"No issues detected.\" If the diff contains no executable code or no actual secret pattern (e.g., no API key, password, or token strings), respond only with 'No security-relevant changes detected.'\"",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        384,
+        -16
+      ],
+      "id": "93cc7407-77cf-4d36-922d-95ac0b5fea0f",
+      "name": "Basic LLM Chain"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "354f98e7-dec8-4216-b14c-73de6be79038",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bdfca4841363ef019e9ac8b3c6bbc7cb1768da4d6eb69321416a484d30daccc1"
+  },
+  "nodeGroups": [],
+  "id": "DAKC9P5wsmv36YUe",
+  "tags": []
+}
